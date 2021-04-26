@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Latest compiled and minified CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+  <link rel="icon" type="image/png" href="linux.png" />
+  <title>SO1</title>
+</head>
+
+<body>
+  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Sistemas Operativos 2 - Grupo 30</a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse"
+      data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </header>
+
+  <div class="container-fluid" id="app">
+    <div class="row">
+      <!-- RAM Monitor -->
+      <main class="col-sm-12">
+        <div
+          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">RAM</h1>
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="startRAMInfo">Iniciar</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="stopRAMInfo">Parar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-dark">
+          <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false"
+            aria-controls="collapseExample">
+            Monitor de RAM
+          </div>
+          <div class="card-body collapse" id="collapseExample">
+            Memoria Total
+            <div class="progress mb-4">
+              <div class="progress-bar" role="progressbar" :class="stripedProgressBarRam"
+                style="width: 100%;" :aria-valuenow="totalRam" aria-valuemin="0" :aria-valuemax="totalRam">{{ totalRam
+                }} MB</div>
+            </div>
+
+            Memoria Consumida
+            <div class="progress mb-4">
+              <div class="progress-bar bg-dark" role="progressbar" :class="stripedProgressBarRam"
+                style="width: 100%;" :aria-valuenow="totalRam" aria-valuemin="0" :aria-valuemax="totalRam">{{ totalRamConsumida
+                }} MB</div>
+            </div>
+
+            Porcentaje de Consumo
+            <div class="progress mb-4">
+              <div class="progress-bar bg-success" :class="stripedProgressBarRam"
+                role="progressbar" :style="`width: ${ramUsage}%;`" :aria-valuenow="ramUsage" aria-valuemin="0"
+                aria-valuemax="100">{{ ramUsage }}%</div>
+            </div>
+
+            <!-- Chart -->
+            <div id="chart"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- CPU Monitor -->
+      <main class="col-sm-12">
+        <div
+          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">CPU</h1>
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="startCPUInfo">Iniciar</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="stopCPUInfo">Parar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card con informacion general de los procesos -->
+        <div class="card border-dark">
+          <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseExample2" aria-expanded="false"
+            aria-controls="collapseExample2">
+            Monitor de CPU
+          </div>
+          <div class="card-body collapse" id="collapseExample2">
+            <!-- Chart -->
+            <div id="chartCPU"></div>
+
+            <!-- Cantidad de Procesos -->
+            <ul class="list-group">
+              <li class="list-group-item list-group-item-dark">Total procesos: {{ cpu.total }}</li>
+              <li class="list-group-item list-group-item-dark">En ejecucion: {{ cpu.ejecucion }}</li>
+              <li class="list-group-item list-group-item-dark">Suspendidos: {{ cpu.suspendidos }}</li>
+              <li class="list-group-item list-group-item-dark">Detenidos: {{ cpu.detenidos }}</li>
+              <li class="list-group-item list-group-item-dark">Zombies: {{ cpu.zombies }}</li>
+              <li class="list-group-item list-group-item-dark">Desconocido: {{ cpu.otros }}</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Card con todos los procesos -->
+        <div class="card border-dark my-5">
+          <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseExample3" aria-expanded="false"
+            aria-controls="collapseExample3">
+            Procesos
+          </div>
+          <div class="card-body collapse" id="collapseExample3">
+            <div class="row">
+              <div class="col-md-4" v-for="(item, index) in cpu.children" :key="index">
+                <!-- Componente personalizado -->
+                <proceso 
+                  :proceso="item.name" 
+                  :id="item.pid" 
+                  :status="item.state" 
+                  :hijos="item.children" 
+                  :ram="item.memory"
+                  :porcentaje="5"
+                  :usuario="item.user"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+    crossorigin="anonymous"></script>
+
+  <!-- Axios -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
+
+  <!-- Apexchart -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <!-- Proceso component -->
+  <script src="js/proceso.vue.js"></script>
+
+  <!-- production version, optimized for size and speed -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> -->
+
+  <!-- development version, includes helpful console warnings -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+  <!-- Custom JS -->
+  <script src="js/main.js"></script>
+</body>
+
+</html>
