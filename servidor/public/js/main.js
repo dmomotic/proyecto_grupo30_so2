@@ -1,4 +1,4 @@
-axios.defaults.baseURL = 'http://35.239.61.215';
+axios.defaults.baseURL = "http://35.226.148.128";
 
 Vue.component("Proceso", Proceso);
 
